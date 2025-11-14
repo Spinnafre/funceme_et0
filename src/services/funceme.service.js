@@ -13,10 +13,11 @@ import { extractEquipmentCode } from "../utils/file.js";
 
 export class FetchFuncemeEquipments {
   #ftpClient;
+  #repository;
 
-  constructor(ftpClientAdapter) {
+  constructor(ftpClientAdapter, repository) {
     this.#ftpClient = ftpClientAdapter;
-
+    this.#repository = repository;
   }
 
   async getLastUpdatedFileName(folder) {
@@ -133,9 +134,11 @@ export class FetchFuncemeEquipments {
         parsedStations
       );
 
-      const pluviometersMeasurements = MeasurementsMapper.ToPersistency(
+      /*const pluviometersMeasurements = MeasurementsMapper.ToPersistency(
         parsedPluviometers
-      );
+      );*/
+
+      await this.#repository.insertMany(stationsMeasurements)
 
 
     } catch (error) {
