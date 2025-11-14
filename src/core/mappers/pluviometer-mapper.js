@@ -6,6 +6,7 @@ export class PluviometerWithMeasurementsMapper {
 
     const toFloat = parseFloat(pluviometry);
 
+
     return {
       ...EquipmentMapper.toDomain(pluviometerEqp),
       Measurements: {

@@ -7,8 +7,9 @@ import {
   StationWithMeasurementsMapper,
 } from "../core/mappers/index.js";
 
-import { EquipmentParser } from "../core/parser/index.js"
+import { PluviometerParser, StationParser } from "../core/parser/index.js"
 import { convertCompressedFileStream } from "../infra/unzip/untar-adapter.js";
+import { extractEquipmentCode } from "../utils/file.js";
 
 export class FetchFuncemeEquipments {
   #ftpClient;
@@ -86,16 +87,16 @@ export class FetchFuncemeEquipments {
       })
 
       const [parsedStations, parsedPluviometers] = [
-        await EquipmentParser.parse(
+        await StationParser.parse(
           stationLists,
-          getLastMeasurements(
+          getLastStationMeasurements(
             yesterDayDate,
           ),
           StationWithMeasurementsMapper.toDomain
         ),
-        await EquipmentParser.parse(
+        await PluviometerParser.parse(
           pluviometerList,
-          getLastMeasurements(
+          getLastPluviometerMeasurements(
             yesterDayDate,
           ),
           PluviometerWithMeasurementsMapper.toDomain
@@ -107,39 +108,34 @@ export class FetchFuncemeEquipments {
 
       parsedStations.forEach((item) => {
         item.Et0 = CalcEto({
-          date: new Date(item.Time),
+          date: new Date(item.Measurements.Time),
           location: {
             altitude: item.Altitude,
-            latitude: item.Latitude,
-            longitude: item.Longitude,
+            latitude: item.Location.Latitude,
+            longitude: item.Location.Longitude,
           },
           measures: {
-            atmosphericPressure: item.AtmosphericPressure,
+            atmosphericPressure: item.Measurements.AtmosphericPressure,
             averageAtmosphericTemperature:
-              item.AverageAtmosphericTemperature,
-            averageRelativeHumidity: item.AverageRelativeHumidity,
-            maxAtmosphericTemperature: item.MaxAtmosphericTemperature,
-            maxRelativeHumidity: item.MaxRelativeHumidity,
-            minAtmosphericTemperature: item.MinAtmosphericTemperature,
-            minRelativeHumidity: item.MinRelativeHumidity,
-            totalRadiation: item.TotalRadiation,
-            windVelocity: item.WindVelocity,
+              item.Measurements.AverageAtmosphericTemperature,
+            averageRelativeHumidity: item.Measurements.AverageRelativeHumidity,
+            maxAtmosphericTemperature: item.Measurements.MaxAtmosphericTemperature,
+            maxRelativeHumidity: item.Measurements.MaxRelativeHumidity,
+            minAtmosphericTemperature: item.Measurements.MinAtmosphericTemperature,
+            minRelativeHumidity: item.Measurements.MinRelativeHumidity,
+            totalRadiation: item.Measurements.TotalRadiation,
+            windVelocity: item.Measurements.WindVelocity,
           },
         });
-        console.log(item.Et0);
       });
 
       const stationsMeasurements = MeasurementsMapper.ToPersistency(
         parsedStations
       );
 
-      // console.log(stationsMeasurements);
-
       const pluviometersMeasurements = MeasurementsMapper.ToPersistency(
         parsedPluviometers
       );
-
-      console.log(pluviometersMeasurements);
 
 
     } catch (error) {
@@ -156,7 +152,7 @@ export class FetchFuncemeEquipments {
 }
 
 // Maybe should be a Util
-function getLastMeasurements(date) {
+function getLastStationMeasurements(date) {
   return function (list) {
     const eqps = [];
 
@@ -179,3 +175,28 @@ function getLastMeasurements(date) {
     return eqps;
   };
 }
+function getLastPluviometerMeasurements(date) {
+  return function (list) {
+    const eqps = [];
+
+    // TO-DO: add mapper
+    list.forEach((data) => {
+      const measure = data.Measurements.find((measure) => measure.data == date);
+      if (measure) {
+        // TO-DO: Add mapper to tomain
+        eqps.push({
+          Code: extractEquipmentCode(data.File),
+          Name: data.Name,
+          Latitude: data.Latitude,
+          Altitude: data.Altitude,
+          Longitude: data.Longitude,
+          Measurements: measure,
+        });
+      }
+    });
+
+    return eqps;
+  };
+}
+
+

@@ -1,6 +1,6 @@
 import { CsvParser } from "./contracts/csv-parser.js";
 
-export class EquipmentParser extends CsvParser {
+export class StationParser extends CsvParser {
   constructor() {
     super();
   }
@@ -27,7 +27,43 @@ export class EquipmentParser extends CsvParser {
   }
 
   static async parse(rawData = [], filter, mapper) {
-    const parser = new EquipmentParser();
+    const parser = new StationParser();
+
+    if (rawData && rawData.length) {
+      const raw = await parser.parse(rawData);
+      return filter(raw).map(mapper);
+    }
+
+    return [];
+  }
+}
+export class PluviometerParser extends CsvParser {
+  constructor() {
+    super();
+  }
+  getMetadata(string) {
+    const [name, longitude, latitude, altitude] = string
+      .slice(0, 4)
+      .map((data) => data.split(":")[1]);
+
+    const Altitude = altitude?.trim();
+    const Longitude = longitude?.trim();
+    const Latitude = latitude?.trim();
+
+    return {
+      Name: name?.trim(),
+      Latitude: Latitude === "nan" ? null : Latitude,
+      Altitude: Altitude === "nan" ? null : Altitude,
+      Longitude: Longitude === "nan" ? null : Longitude,
+    };
+  }
+
+  splitMeasures(string) {
+    return string.slice(4).join("\n");
+  }
+
+  static async parse(rawData = [], filter, mapper) {
+    const parser = new PluviometerParser();
 
     if (rawData && rawData.length) {
       const raw = await parser.parse(rawData);

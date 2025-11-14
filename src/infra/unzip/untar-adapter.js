@@ -10,13 +10,18 @@ function convertCompressedFileStream(tarballStream) {
 
     extract.on("entry", async function (header, stream, next) {
       let chunks = "";
+      console.log(header);
       // Semelhante ao stream.on('data',()=>{})
       for await (let chunk of stream) {
         chunks += chunk.toString();
       }
 
       //Transforma array de buffers em um único buffer
-      results.push(chunks);
+      results.push({
+        fileName: header.name,
+        string: chunks
+      })
+
       next();
     });
 
