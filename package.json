@@ -14,18 +14,15 @@
   ],
   "license": "ISC",
   "dependencies": {
+    "@google-cloud/bigquery": "^8.1.1",
     "csvtojson": "2.0.10",
     "dotenv": "16.0.3",
     "ftp": "0.3.10",
-    "knex": "3.1.0",
     "pino": "8.15.0",
     "pino-pretty": "10.2.0",
     "tar-stream": "3.0.0",
     "turf": "3.0.14"
   },
   "devDependencies": {
-    "@jest/globals": "^29.5.0",
-    "cross-env": "^7.0.3",
-    "jest": "^29.5.0"
   }
 }

@@ -16,7 +16,11 @@ function convertCompressedFileStream(tarballStream) {
       }
 
       //Transforma array de buffers em um único buffer
-      results.push(chunks);
+      results.push({
+        fileName: header.name,
+        string: chunks
+      })
+
       next();
     });
 

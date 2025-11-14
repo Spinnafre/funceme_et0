@@ -7,15 +7,17 @@ import {
   StationWithMeasurementsMapper,
 } from "../core/mappers/index.js";
 
-import { EquipmentParser } from "../core/parser/index.js"
+import { PluviometerParser, StationParser } from "../core/parser/index.js"
 import { convertCompressedFileStream } from "../infra/unzip/untar-adapter.js";
+import { extractEquipmentCode } from "../utils/file.js";
 
 export class FetchFuncemeEquipments {
   #ftpClient;
+  #repository;
 
-  constructor(ftpClientAdapter) {
+  constructor(ftpClientAdapter, repository) {
     this.#ftpClient = ftpClientAdapter;
-
+    this.#repository = repository;
   }
 
   async getLastUpdatedFileName(folder) {
@@ -86,92 +88,56 @@ export class FetchFuncemeEquipments {
       })
 
       const [parsedStations, parsedPluviometers] = [
-        await EquipmentParser.parse(
+        await StationParser.parse(
           stationLists,
-          getLastMeasurements(
+          getLastStationMeasurements(
             yesterDayDate,
           ),
-          StationWithMeasurementsMapper.toDomain
+          StationWithMeasurementsMapper.ToPersistency
         ),
-        await EquipmentParser.parse(
+        await PluviometerParser.parse(
           pluviometerList,
-          getLastMeasurements(
+          getLastPluviometerMeasurements(
             yesterDayDate,
           ),
-          PluviometerWithMeasurementsMapper.toDomain
+          PluviometerWithMeasurementsMapper.ToPersistency
         ),
       ];
 
       // QUESTION: If throw error but connection still alive?
       await this.#ftpClient.close();
 
-      parsedStations.forEach((item) => {
-        item.Et0 = CalcEto({
-          date: new Date(item.Time),
-          location: {
-            altitude: item.Altitude,
-            latitude: item.Latitude,
-            longitude: item.Longitude,
-          },
-          measures: {
-            atmosphericPressure: item.AtmosphericPressure,
-            averageAtmosphericTemperature:
-              item.AverageAtmosphericTemperature,
-            averageRelativeHumidity: item.AverageRelativeHumidity,
-            maxAtmosphericTemperature: item.MaxAtmosphericTemperature,
-            maxRelativeHumidity: item.MaxRelativeHumidity,
-            minAtmosphericTemperature: item.MinAtmosphericTemperature,
-            minRelativeHumidity: item.MinRelativeHumidity,
-            totalRadiation: item.TotalRadiation,
-            windVelocity: item.WindVelocity,
-          },
-        });
-        console.log(item.Et0);
-      });
+      const measurements = [...parsedStations, ...parsedPluviometers]
 
-      const stationsMeasurements = MeasurementsMapper.ToPersistency(
-        parsedStations
-      );
-
-      // console.log(stationsMeasurements);
-
-      const pluviometersMeasurements = MeasurementsMapper.ToPersistency(
-        parsedPluviometers
-      );
-
-      console.log(pluviometersMeasurements);
+      await this.#repository.insertMany(measurements)
 
 
     } catch (error) {
-      console.error(error);
-
       // TODO: detect when has a connection error
-      if (error) {
-        await this.#ftpClient.close();
-      }
+      await this.#ftpClient.close();
 
-      throw new Error(error.message)
+      throw error
     }
   }
 }
 
 // Maybe should be a Util
-function getLastMeasurements(date) {
+function getLastStationMeasurements(date) {
   return function (list) {
     const eqps = [];
 
     // TO-DO: add mapper
     list.forEach((data) => {
-      const measure = data.Measurements.find((measure) => measure.data == date);
+      const measure = data.measurements.find((measure) => measure.data == date);
       if (measure) {
         // TO-DO: Add mapper to tomain
         eqps.push({
-          Code: data.Code,
-          Name: data.Name,
-          Latitude: data.Latitude,
-          Altitude: data.Altitude,
-          Longitude: data.Longitude,
-          Measurements: measure,
+          code: data.code,
+          name: data.name,
+          latitude: data.latitude,
+          altitude: data.altitude,
+          longitude: data.longitude,
+          measurements: measure,
         });
       }
     });
@@ -179,3 +145,28 @@ function getLastMeasurements(date) {
     return eqps;
   };
 }
+function getLastPluviometerMeasurements(date) {
+  return function (list) {
+    const eqps = [];
+
+    // TO-DO: add mapper
+    list.forEach((data) => {
+      const measure = data.measurements.find((measure) => measure.data == date);
+      if (measure) {
+        // TO-DO: Add mapper to tomain
+        eqps.push({
+          code: extractEquipmentCode(data.file),
+          name: data.name,
+          latitude: data.latitude,
+          altitude: data.altitude,
+          longitude: data.longitude,
+          measurements: measure,
+        });
+      }
+    });
+
+    return eqps;
+  };
+}
+
+

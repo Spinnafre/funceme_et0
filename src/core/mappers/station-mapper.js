@@ -2,38 +2,49 @@ function parseMeasure(measure) {
   return parseFloat(measure) || null;
 }
 
-import { EquipmentMapper } from "./equipment.js";
+import { CalcEto } from "../et0.js";
 export class StationWithMeasurementsMapper {
-  static toDomain(station) {
+  static ToPersistency(station) {
     const [
-      Time,
-      AverageAtmosphericTemperature,
-      MaxAtmosphericTemperature,
-      MinAtmosphericTemperature,
-      AverageRelativeHumidity,
-      MaxRelativeHumidity,
-      MinRelativeHumidity,
-      AtmosphericPressure,
-      WindVelocity,
-      TotalRadiation,
-    ] = Object.values(station.Measurements);
+      time,
+      averageAtmosphericTemperature,
+      maxAtmosphericTemperature,
+      minAtmosphericTemperature,
+      averageRelativeHumidity,
+      maxRelativeHumidity,
+      minRelativeHumidity,
+      atmosphericPressure,
+      windVelocity,
+      totalRadiation,
+    ] = Object.values(station.measurements);
+
+    const Et0 = CalcEto({
+      date: new Date(time),
+      location: {
+        altitude: station.altitude,
+        latitude: station.latitude,
+        longitude: station.longitude,
+      },
+      measures: {
+        atmosphericPressure: parseMeasure(atmosphericPressure),
+        averageAtmosphericTemperature:
+          parseMeasure(averageAtmosphericTemperature),
+        averageRelativeHumidity: parseMeasure(averageRelativeHumidity),
+        maxAtmosphericTemperature: parseMeasure(maxAtmosphericTemperature),
+        maxRelativeHumidity: parseMeasure(maxRelativeHumidity),
+        minAtmosphericTemperature: parseMeasure(minAtmosphericTemperature),
+        minRelativeHumidity: parseMeasure(minRelativeHumidity),
+        totalRadiation: parseMeasure(totalRadiation),
+        windVelocity: parseMeasure(windVelocity),
+      },
+    })
 
     return {
-      ...EquipmentMapper.toDomain(station),
-      Measurements: {
-        Time,
-        AverageAtmosphericTemperature: parseMeasure(
-          AverageAtmosphericTemperature
-        ),
-        MaxAtmosphericTemperature: parseMeasure(MaxAtmosphericTemperature),
-        MinAtmosphericTemperature: parseMeasure(MinAtmosphericTemperature),
-        AverageRelativeHumidity: parseMeasure(AverageRelativeHumidity),
-        MaxRelativeHumidity: parseMeasure(MaxRelativeHumidity),
-        MinRelativeHumidity: parseMeasure(MinRelativeHumidity),
-        AtmosphericPressure: parseMeasure(AtmosphericPressure),
-        WindVelocity: parseMeasure(WindVelocity),
-        TotalRadiation: parseMeasure(TotalRadiation),
-      },
+      time,
+      fk_equipment: "",
+      fk_type: "",
+      name: station.name,
+      value: Et0
     };
   }
 }

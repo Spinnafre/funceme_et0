@@ -12,8 +12,8 @@ export class CsvParser {
   async parse(rawData = []) {
     const parsed = [];
 
-    for (const item of rawData) {
-      const data = item.trim().split("\n");
+    for (const { fileName, string } of rawData) {
+      const data = string.trim().split("\n");
 
       const metadata = this.getMetadata(data);
 
@@ -23,7 +23,8 @@ export class CsvParser {
 
       parsed.push({
         ...metadata,
-        Measurements: measures,
+        file: fileName,
+        measurements: measures,
       });
     }
 

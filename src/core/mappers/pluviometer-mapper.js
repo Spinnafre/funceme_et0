@@ -1,17 +1,16 @@
-import { EquipmentMapper } from "./equipment.js";
 
 export class PluviometerWithMeasurementsMapper {
-  static toDomain(pluviometerEqp) {
-    const [time, pluviometry] = Object.values(pluviometerEqp.Measurements);
+  static ToPersistency(pluviometerEqp) {
+    const [time, pluviometry] = Object.values(pluviometerEqp.measurements);
 
-    const toFloat = parseFloat(pluviometry);
+    const value = parseFloat(pluviometry);
 
     return {
-      ...EquipmentMapper.toDomain(pluviometerEqp),
-      Measurements: {
-        Time: time,
-        Precipitation: toFloat >= 0 ? toFloat : null,
-      },
+      time,
+      fk_equipment: "",
+      fk_type: "",
+      name: pluviometerEqp.name,
+      value: value >= 0 ? value : null,
     };
   }
 }
