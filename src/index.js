@@ -1,4 +1,4 @@
-import { makeFuncemeService } from "../services/funceme-service.factory.js";
+import { makeFuncemeService } from "./services/funceme-service.factory.js";
 import dotenv from "dotenv";
 
 dotenv.config();
