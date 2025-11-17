@@ -12,6 +12,9 @@
     "node",
     "scrapper"
   ],
+  "engines": {
+    "node": "20"
+  },
   "license": "ISC",
   "dependencies": {
     "@google-cloud/bigquery": "^8.1.1",
