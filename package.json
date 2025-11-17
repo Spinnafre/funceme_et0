@@ -18,6 +18,7 @@
   "license": "ISC",
   "dependencies": {
     "@google-cloud/bigquery": "^8.1.1",
+    "@google-cloud/functions-framework": "^4.0.0",
     "csvtojson": "2.0.10",
     "dotenv": "16.0.3",
     "ftp": "0.3.10",
@@ -25,7 +26,5 @@
     "pino-pretty": "10.2.0",
     "tar-stream": "3.0.0",
     "turf": "3.0.14"
-  },
-  "devDependencies": {
   }
 }

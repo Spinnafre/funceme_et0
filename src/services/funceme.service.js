@@ -1,8 +1,6 @@
 import { ftpConfig, funcemeFtpDirectories } from "../config/config.js";
 import { DateFormatter } from "../core/date-formatter.js";
-import { CalcEto } from "../core/et0.js";
 import {
-  MeasurementsMapper,
   PluviometerWithMeasurementsMapper,
   StationWithMeasurementsMapper,
 } from "../core/mappers/index.js";
