@@ -69,6 +69,8 @@ export class FetchFuncemeEquipments {
   async execute() {
     try {
 
+      console.log(ftpConfig);
+
       await this.#ftpClient.connect({
         host: ftpConfig.host,
         user: ftpConfig.user,

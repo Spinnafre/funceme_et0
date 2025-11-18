@@ -1,4 +1,6 @@
 const { makeFuncemeService } = await import("./services/funceme-service.factory.js");
+import dotenv from "dotenv";
+dotenv.config();
 
 export const runFuncemeJob = async (req, res) => {
     try {
