@@ -2,6 +2,7 @@ function parseMeasure(measure) {
   return parseFloat(measure) || null;
 }
 
+import { truncateDecimal } from "../../utils/number_formatter.js";
 import { CalcEto } from "../et0.js";
 export class StationWithMeasurementsMapper {
   static ToPersistency(station) {
@@ -39,12 +40,13 @@ export class StationWithMeasurementsMapper {
       },
     })
 
+    let value = Et0 != null ? truncateDecimal(Et0, 5) : null
+
     return {
       time,
-      fk_equipment: "",
-      fk_type: "",
-      name: station.name,
-      value: Et0
+      fk_equipment: station.id_equipment || null,
+      fk_type: null,
+      value
     };
   }
 }

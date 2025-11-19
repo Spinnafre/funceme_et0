@@ -26,12 +26,12 @@ export class StationParser extends CsvParser {
     return string.slice(5).join("\n");
   }
 
-  static async parse(rawData = [], filter, mapper) {
+  static async parse(rawData = [], filter) {
     const parser = new StationParser();
 
     if (rawData && rawData.length) {
       const raw = await parser.parse(rawData);
-      return filter(raw).map(mapper);
+      return filter(raw);
     }
 
     return [];
@@ -62,12 +62,12 @@ export class PluviometerParser extends CsvParser {
     return string.slice(4).join("\n");
   }
 
-  static async parse(rawData = [], filter, mapper) {
+  static async parse(rawData = [], filter) {
     const parser = new PluviometerParser();
 
     if (rawData && rawData.length) {
       const raw = await parser.parse(rawData);
-      return filter(raw).map(mapper);
+      return filter(raw);
     }
 
     return [];

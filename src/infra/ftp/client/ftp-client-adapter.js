@@ -15,16 +15,10 @@ export class FTPClientAdapter {
 
   async close() {
     return new Promise((resolve, reject) => {
-      Logger.info({
-        msg: "Closing FTP connection...",
-      });
       this.connection.end();
 
       this.connection.once("close", (err) => {
         if (err) return reject(new ConnectionError(err.message));
-        Logger.info({
-          msg: "Conexão com ftp fechada com sucesso",
-        });
         resolve();
       });
     });
@@ -66,11 +60,6 @@ export class FTPClientAdapter {
         })
       );
 
-      // this.connection.once("close", (err) => {
-      //   if (err)
-      //     return reject(new Error(`Falha ao fechar a conexão ::: ${err}`));
-      //   console.log("[FTP] Conexão com ftp fechada com sucesso");
-      // });
 
       this.connection.once("error", (err) => {
         return reject(
@@ -78,11 +67,6 @@ export class FTPClientAdapter {
         );
       });
 
-      this.connection.once("greeting", (msg) =>
-        Logger.info({
-          msg: `[Greeting] -${msg}`,
-        })
-      );
 
       this.connection.once("end", () =>
         Logger.info({
@@ -97,9 +81,6 @@ export class FTPClientAdapter {
   }
 
   async getFile(folder, file) {
-    Logger.info({
-      msg: `🔍 Getting stream from path ${folder}/${file}`,
-    });
     return new Promise((resolve, reject) => {
       this.connection.cwd("/", (error) => {
         if (error) reject(error);
@@ -128,12 +109,6 @@ export class FTPClientAdapter {
         });
       });
 
-      // this.connection.cwd("/", (error) => {
-      //   if (error) {
-      //     console.log(error);
-      //     return reject(error);
-      //   }
-      // });
 
       this.connection.get(file, function (error, stream) {
         Logger.info({

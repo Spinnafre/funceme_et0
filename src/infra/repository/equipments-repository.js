@@ -1,9 +1,48 @@
 import { BigQuery } from "@google-cloud/bigquery";
+import { Logger } from "../logger/logger";
 
 export class EquipmentsRepository {
     constructor() {
         this.bigquery = new BigQuery();
-        this.dataset = this.bigquery.dataset("DadosMeteorologicos");
+        this.projectId = "teste-carga-bigquery";
+        this.datasetId = "DadosMeteorologicos";
+        this.dataset = this.bigquery.dataset(this.datasetId);
+    }
+
+    /**
+      * Busca equipamentos filtrando por vários códigos externos
+      * @param {string[]} externalIds - lista de códigos id_equipment_external
+      */
+    async findByExternalIds(externalIds = []) {
+        const tableId = "metereological_equipment";
+
+        const idsFormatted = externalIds.map(id => `'${id}'`).join(',');
+
+        const query = `
+                    SELECT 
+                        id_equipment,
+                        id_equipment_external,
+                        name
+                    FROM \`${this.projectId}.${this.datasetId}.${tableId}\`
+                    WHERE id_equipment_external IN (${idsFormatted})
+                `;
+
+        const [rows] = await this.bigquery.query({
+            query: query,
+            location: 'US',
+        });
+
+        const map = new Map();
+
+        rows.forEach(row => {
+            map.set(row.id_equipment_external, {
+                id_equipment: row.id_equipment,
+                id_equipment_external: row.id_equipment_external,
+                name: row.name,
+            });
+        });
+
+        return map;
     }
 
     /**
@@ -11,15 +50,12 @@ export class EquipmentsRepository {
      * @param {Array<Object>} rows - lista de objetos
      */
     async insertMany(rows) {
-        try {
-            const table = this.dataset.table("equipment_readings");
+        const table = this.dataset.table("equipment_readings");
 
-            await table.insert(rows);
+        await table.insert(rows);
 
-            console.log(`Inseridos ${rows.length} registros no BigQuery`);
-        } catch (err) {
-            console.error("Erro ao inserir múltiplos registros no BigQuery:", err);
-            throw err;
-        }
+        Logger.info({
+            msg: `Inserted ${rows.length} rows`
+        })
     }
 }

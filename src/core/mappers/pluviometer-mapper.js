@@ -7,9 +7,8 @@ export class PluviometerWithMeasurementsMapper {
 
     return {
       time,
-      fk_equipment: "",
-      fk_type: "",
-      name: pluviometerEqp.name,
+      fk_equipment: pluviometerEqp.id_equipment || null,
+      fk_type: null,
       value: value >= 0 ? value : null,
     };
   }

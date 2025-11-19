@@ -69,8 +69,6 @@ export class FetchFuncemeEquipments {
   async execute() {
     try {
 
-      console.log(ftpConfig);
-
       await this.#ftpClient.connect({
         host: ftpConfig.host,
         user: ftpConfig.user,
@@ -92,27 +90,48 @@ export class FetchFuncemeEquipments {
           stationLists,
           getLastStationMeasurements(
             yesterDayDate,
-          ),
-          StationWithMeasurementsMapper.ToPersistency
+          )
         ),
         await PluviometerParser.parse(
           pluviometerList,
           getLastPluviometerMeasurements(
             yesterDayDate,
           ),
-          PluviometerWithMeasurementsMapper.ToPersistency
         ),
       ];
 
       // QUESTION: If throw error but connection still alive?
       await this.#ftpClient.close();
 
-      const measurements = [...parsedStations, ...parsedPluviometers]
+      const eqp_codes = [...parsedStations, ...parsedPluviometers]
+        .map((measurement) => measurement.code)
+
+      const registeredEquipmentsMap = await this.#repository.findByExternalIds(eqp_codes)
+
+      const stationMeasurements = parsedStations.map((measurements) => {
+        const registeredEquipment = registeredEquipmentsMap.get(measurements.code)
+        if (registeredEquipment) {
+          measurements.id_equipment = registeredEquipment.id_equipment
+        }
+        return StationWithMeasurementsMapper.ToPersistency(measurements)
+      })
+
+      const pluviometerMeasurements = parsedPluviometers.map((measurements) => {
+        const registeredEquipment = registeredEquipmentsMap.get(measurements.code)
+        if (registeredEquipment) {
+          measurements.id_equipment = registeredEquipment.id_equipment
+        }
+        return PluviometerWithMeasurementsMapper.ToPersistency(measurements)
+      })
+
+      const measurements = [...stationMeasurements, ...pluviometerMeasurements]
+
 
       await this.#repository.insertMany(measurements)
 
 
     } catch (error) {
+
       // TODO: detect when has a connection error
       await this.#ftpClient.close();
 
